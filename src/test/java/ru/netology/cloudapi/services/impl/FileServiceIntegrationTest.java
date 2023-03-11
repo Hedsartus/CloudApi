@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.containers.GenericContainer;
 import ru.netology.cloudapi.exceptions.CloudApiExceptions;
@@ -32,8 +33,9 @@ class FileServiceIntegrationTest {
     FileServiceImpl fileService;
     private static final String CONTAINER_NAME_DATABASE = "mysql_db";
 
+    private final User user = User.builder().username("user").build();
     private static final String EMPTY = "_EMPTY_";
-    public static GenericContainer<?> app = new GenericContainer("myappp:1.0")
+    public static GenericContainer<?> app = new GenericContainer("backend:latest")
             .withExposedPorts(8080)
             .withEnv("SPRING_DATASOURCE_URL", "jdbc:mysql://"+CONTAINER_NAME_DATABASE+":3306/cloudapi")
             .withEnv("SPRING_LIQUIBASE_URL", "jdbc:mysql://"+CONTAINER_NAME_DATABASE+":3306/cloudapi");
@@ -59,6 +61,35 @@ class FileServiceIntegrationTest {
         Exception thrown = Assertions.assertThrows(
                 ErrorData.class, () -> fileService.getFile(EMPTY, EMPTY));
         Assertions.assertEquals("User not found!", thrown.getMessage());
+    }
+
+    @Test
+    void uploadEmptyMultipartFile() {
+        MockMultipartFile multipartFileMock = new MockMultipartFile("filename",
+                "filename",
+                "text/plain",
+                new byte[]{});
+
+        RuntimeException exception = Assertions.assertThrows(
+                ErrorData.class, () -> fileService.upload(multipartFileMock, user.getUsername()));
+
+        Assertions.assertEquals("The filename is corrupted or missing!", exception.getMessage());
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("getArgumentsDelete")
+    void deleteTest(String username, String filename, CloudApiExceptions ex) {
+        Exception thrown = Assertions.assertThrows(
+                ErrorData.class, () -> fileService.delete(username, filename));
+        Assertions.assertEquals(ex.getMessage(), thrown.getMessage());
+    }
+
+    public static Stream<Arguments> getArgumentsDelete() {
+        return Stream.of(
+                Arguments.of(EMPTY, "", new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED)),
+                Arguments.of("user", EMPTY, new ErrorData("File not found!", HttpStatus.BAD_REQUEST))
+        );
     }
 
 

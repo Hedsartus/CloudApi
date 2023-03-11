@@ -37,7 +37,7 @@ public class FileServiceImpl implements FileService {
     @Transactional
     @Override
     public FileEntity upload(MultipartFile file, String username) throws IOException {
-        if (file.isEmpty()) {
+        if (file.isEmpty() && file.getSize() == 0) {
             throw new ErrorData("The filename is corrupted or missing!", HttpStatus.BAD_REQUEST);
         }
 
