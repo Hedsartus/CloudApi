@@ -1,5 +1,21 @@
-version: '3'
+version: '2.1'
 services:
+  frontend:
+    container_name: frontend
+    build: ./netology-diplom-frontend/
+    ports:
+      - "3000:8080"
+  app:
+    container_name: app
+    build: ./
+    ports:
+      - "8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/cloudapi
+      SPRING_LIQUIBASE_URL: jdbc:mysql://database:3306/cloudapi
   database:
     container_name: "database"
     image: "mysql:latest"
@@ -8,23 +24,12 @@ services:
     environment:
       MYSQL_DATABASE: cloudapi
       MYSQL_ROOT_PASSWORD: mysql
-      MYSQL_USERNAME: root
-      MYSQL_USER: root
-      MYSQL_PASSWORD: mysql
-  app:
-    container_name: "app"
-    build: ./
-    ports:
-      - "8080:8080"
-    depends_on:
-      - database
-    environment:
-      spring_datasource_url: jdbc:mysql://database:3306/cloudapi
-      SPRING_LIQUIBASE_URL: jdbc:mysql://database:3306/cloudapi
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: mysql
-      SPRING_LIQUIBASE_USER: root
-      SPRING_LIQUIBASE_PASSWORD: mysql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://database:3306"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
 
 
 

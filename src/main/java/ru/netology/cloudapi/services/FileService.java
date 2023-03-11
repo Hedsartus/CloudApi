@@ -10,7 +10,7 @@ import java.util.List;
 public interface FileService {
     List<FileDto> getFileListByUserId(Long id, int Limit);
 
-    FileEntity upload(String fileName, MultipartFile files, String username) throws IOException;
+    FileEntity upload(MultipartFile files, String username) throws IOException;
 
     void delete(String name, String filename);
 

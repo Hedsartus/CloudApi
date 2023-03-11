@@ -1,7 +1,7 @@
 package ru.netology.cloudapi.controllers;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,35 +17,27 @@ import java.security.Principal;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class UserRestController {
     private final UserService userService;
     private final FileService fileService;
 
-    @Autowired
-    public UserRestController(UserService userService, FileService fileService) {
-        this.userService = userService;
-        this.fileService = fileService;
-    }
-
     @GetMapping("/list")
     public Object showAllFiles(@RequestParam("limit") int limit, Principal principal) {
         long userId = userService.findByUsername(principal.getName()).getId();
-        log.info("IN showAllFiles > userId = " + userId);
         return fileService.getFileListByUserId(userId, limit);
     }
 
     @RequestMapping(value = "/file", method = RequestMethod.POST)
-    public ResponseEntity<?> handleFileUpload(@RequestParam("filename") String filename,
-                                              @RequestParam("file") MultipartFile file,
-                                              Principal principal) {
-        if (!file.isEmpty()) {
-            try {
-                fileService.upload(filename, file, principal.getName());
-            } catch (IOException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error input data");
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error input data");
+    public ResponseEntity<?> fileUpload(
+            @RequestParam("filename") String filename,
+            @RequestParam("file") MultipartFile file,
+            Principal principal) {
+
+        try {
+            fileService.upload(file, principal.getName());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         return ResponseEntity.status(HttpStatus.OK).body("File uploaded");
     }

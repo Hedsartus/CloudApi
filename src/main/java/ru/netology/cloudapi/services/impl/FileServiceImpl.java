@@ -1,5 +1,6 @@
 package ru.netology.cloudapi.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -21,14 +22,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
     private final FileRepository filesRepository;
     private final UserRepository userRepository;
-
-    public FileServiceImpl(FileRepository filesRepository, UserRepository userRepository) {
-        this.filesRepository = filesRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public List<FileDto> getFileListByUserId(Long id, int limit) {
@@ -39,12 +36,13 @@ public class FileServiceImpl implements FileService {
 
     @Transactional
     @Override
-    public FileEntity upload(String fileName, MultipartFile file, String username) throws IOException {
+    public FileEntity upload(MultipartFile file, String username) throws IOException {
         if (file.isEmpty()) {
-            throw new ErrorData("The file is corrupted or missing", HttpStatus.BAD_REQUEST);
+            throw new ErrorData("The filename is corrupted or missing!", HttpStatus.BAD_REQUEST);
         }
 
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED));
 
         var fileEntity = FileEntity.builder()
                 .size(file.getSize())
@@ -53,7 +51,7 @@ public class FileServiceImpl implements FileService {
                 .created(LocalDate.now())
                 .user(user).build();
 
-        log.info("IN upload file : " + file.getOriginalFilename());
+        log.info("IN upload - file : " + file.getOriginalFilename());
 
         return filesRepository.save(fileEntity);
     }
@@ -61,10 +59,11 @@ public class FileServiceImpl implements FileService {
     @Transactional
     @Override
     public void delete(String username, String filename) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED));
 
-        if(filesRepository.existsByNameAndUser(filename, user)) {
-            log.info("IN delete file WHERE filename = "+filename+" AND user.id = "+user.getId());
+        if (filesRepository.existsByNameAndUser(filename, user)) {
+            log.info("IN delete file WHERE filename = " + filename + " AND user.id = " + user.getId());
             filesRepository.removeByNameAndUser_Id(filename, user.getId());
         } else {
             throw new ErrorData("This file does not exist!", HttpStatus.BAD_REQUEST);
@@ -73,16 +72,11 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public FileEntity rename(String filename, FileDto newFile, String userName) {
-        User user = userRepository.findByUsername(userName);
+        User user = userRepository.findByUsername(userName).orElseThrow(() ->
+                new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED));
 
-        if (user == null) {
-            throw new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED);
-        }
-
-        FileEntity fileEntity = filesRepository.findByNameAndUser(filename, user);
-        if (fileEntity == null) {
-            throw new ErrorData("This file does not exist!", HttpStatus.BAD_REQUEST);
-        }
+        FileEntity fileEntity = filesRepository.findByNameAndUser(filename, user).orElseThrow(() ->
+                new ErrorData("File not found!", HttpStatus.BAD_REQUEST));
 
         fileEntity.setName(newFile.getFilename());
 
@@ -91,22 +85,16 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public FileEntity getFile(String filename, String username) {
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElseThrow(() ->
+                new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED));
 
-        if (user == null) {
-            throw new JwtAuthenticationException("User not found!", HttpStatus.UNAUTHORIZED);
-        }
-
-        FileEntity fileEntity = filesRepository.findByNameAndUser(filename, user);
-        if (fileEntity == null) {
-            throw new ErrorData("File not found", HttpStatus.BAD_REQUEST);
-        }
-        return fileEntity;
+        return filesRepository.findByNameAndUser(filename, user).orElseThrow(() ->
+                new ErrorData("File not found!", HttpStatus.BAD_REQUEST));
     }
 
     private String generateFilename(String filename, User user) {
-        if(filesRepository.existsByNameAndUser(filename, user)) {
-            filename = generateFilename("- "+filename, user);
+        if (filesRepository.existsByNameAndUser(filename, user)) {
+            filename = generateFilename("- " + filename, user);
         }
 
         return filename;

@@ -7,6 +7,7 @@ import ru.netology.cloudapi.model.FileEntity;
 import ru.netology.cloudapi.model.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FileRepository extends JpaRepository<FileEntity, Long> {
     @Query(value = "SELECT * FROM files f WHERE f.user_id = :userid LIMIT :limitCount", nativeQuery = true)
@@ -18,5 +19,5 @@ public interface FileRepository extends JpaRepository<FileEntity, Long> {
 
     void removeByNameAndUser_Id(String filename, Long idUser);
 
-    FileEntity findByNameAndUser(String filename, User user);
+    Optional<FileEntity> findByNameAndUser(String filename, User user);
 }
