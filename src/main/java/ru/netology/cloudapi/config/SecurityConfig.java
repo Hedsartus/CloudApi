@@ -23,6 +23,8 @@ import java.util.List;
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtAuthEntryPoint jwtAuthEntryPoint;
+
+    private static final String HEADER_TOKEN = "auth-token";
     private static final String LOGIN_ENDPOINT = "/login";
     private static final String FRONT_ORIGIN = "http://localhost:3000";
     private static final List<String> METHODS = List.of("GET", "POST", "PUT", "DELETE", "OPTIONS");
@@ -52,7 +54,7 @@ public class SecurityConfig {
                 .and()
                 .logout()
                 .clearAuthentication(true)
-                .deleteCookies("auth-token");
+                .deleteCookies(HEADER_TOKEN);
 
         return http.build();
     }

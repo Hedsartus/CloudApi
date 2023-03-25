@@ -18,7 +18,6 @@ import ru.netology.cloudapi.services.FileService;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -28,10 +27,8 @@ public class FileServiceImpl implements FileService {
     private final UserRepository userRepository;
 
     @Override
-    public List<FileDto> getFileListByUserId(Long id, int limit) {
-        List<FileEntity> fileList = filesRepository.findByUserIdAndLimit(id, limit);
-        return fileList.stream().map(f -> new FileDto(f.getName(), f.getSize()))
-                .collect(Collectors.toList());
+    public List<FileEntity> getFileListByUserId(Long id, int limit) {
+        return filesRepository.findByUserIdAndLimit(id, limit);
     }
 
     @Transactional

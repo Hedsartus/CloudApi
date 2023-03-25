@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface FileService {
-    List<FileDto> getFileListByUserId(Long id, int Limit);
+    List<FileEntity> getFileListByUserId(Long id, int Limit);
 
     FileEntity upload(MultipartFile files, String username) throws IOException;
 

@@ -14,6 +14,7 @@ import ru.netology.cloudapi.services.UserService;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,16 +24,16 @@ public class UserRestController {
     private final FileService fileService;
 
     @GetMapping("/list")
-    public Object showAllFiles(@RequestParam("limit") int limit, Principal principal) {
+    public ResponseEntity<List<FileDto>> showAllFiles(@RequestParam("limit") int limit, Principal principal) {
         long userId = userService.findByUsername(principal.getName()).getId();
-        return fileService.getFileListByUserId(userId, limit);
+        List<FileEntity> fileList = fileService.getFileListByUserId(userId, limit);
+        List<FileDto> result = fileList.stream().map(f -> new FileDto(f.getName(), f.getSize())).toList();
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @RequestMapping(value = "/file", method = RequestMethod.POST)
-    public ResponseEntity<?> fileUpload(
-            @RequestParam("filename") String filename,
-            @RequestParam("file") MultipartFile file,
-            Principal principal) {
+    public ResponseEntity<?> fileUpload(@RequestParam("file") MultipartFile file, Principal principal) {
 
         try {
             fileService.upload(file, principal.getName());

@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import ru.netology.cloudapi.dto.FileDto;
+import ru.netology.cloudapi.model.FileEntity;
 import ru.netology.cloudapi.model.User;
 import ru.netology.cloudapi.services.FileService;
 import ru.netology.cloudapi.services.UserService;
@@ -37,11 +38,11 @@ public class UserRestControllerTest {
         user.setId(1L);
         when(userService.findByUsername(principal.getName())).thenReturn(user);
 
-        List<FileDto> fileList = new ArrayList<>();
-        FileDto file1 = new FileDto("file1.txt", 12123L);
+        List<FileEntity> fileList = new ArrayList<>();
+        FileEntity file1 = FileEntity.builder().name("file1.txt").size(12123L).build();
         fileList.add(file1);
 
-        FileDto file2 = new FileDto("file2.txt", 23434L);
+        FileEntity file2 = FileEntity.builder().name("file2.txt").size(1123L).build();
         fileList.add(file2);
 
         when(fileService.getFileListByUserId(user.getId(), 10)).thenReturn(fileList);
