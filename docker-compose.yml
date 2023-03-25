@@ -26,7 +26,7 @@ services:
       MYSQL_ROOT_PASSWORD: mysql
     healthcheck:
       test: ["CMD", "curl", "-f", "http://database:3306"]
-      interval: 20s
+      interval: 10s
       timeout: 5s
       retries: 5
 
