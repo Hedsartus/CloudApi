@@ -1,4 +1,4 @@
-package ru.netology.cloudapi.edvice;
+package ru.netology.cloudapi.advice;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
